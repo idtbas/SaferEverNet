@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>SaferEverNet</title>
+  <meta name="description" content="TRIBRAID – Passwörter aus drei unabhängigen, miteinander verflochtenen Zufallssträngen.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2317171a'/%3E%3Cpath d='M8 10c8 0 8 12 16 12M8 22c8 0 8-12 16-12M8 16h16' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M6 10c10 0 10 12 20 12" class="s-m"/>
+        <path d="M6 22c10 0 10-12 20-12" class="s-h"/>
+        <path d="M6 16h20" class="s-z"/>
+      </svg>
+      SaferEverNet
+    </a>
+    <button id="selftest" class="chip" type="button" aria-expanded="false" aria-controls="testList">Selbsttest läuft …</button>
+  </header>
+  <div class="testwrap"><ul id="testList" class="testlist" hidden></ul></div>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>Ein Passwort, das niemand erraten kann.</h1>
+      <p class="lede">Nicht einmal mit der Energie einer Galaxie.</p>
+    </section>
+
+    <section class="card" aria-label="Passwort-Generator">
+      <!-- Phase 1: Bewegung sammeln -->
+      <div id="pad" class="pad">
+        <canvas id="padCanvas" aria-hidden="true"></canvas>
+        <div class="pad-hint">
+          <strong>Kritzel hier herum</strong>
+          <span>Mit Maus oder Finger. Deine Bewegung wird zu einem der drei Stränge.</span>
+          <div class="meter" aria-hidden="true"><i id="padMeter"></i></div>
+          <span id="padStatus" class="pad-status" aria-live="polite">0 %</span>
+          <button id="skipPad" class="link" type="button">ohne Kritzeln weiter</button>
+        </div>
+      </div>
+
+      <!-- Phase 2: Ergebnis -->
+      <div id="result" class="result" hidden>
+        <output id="password" class="password" aria-live="polite"></output>
+        <div class="actions">
+          <button id="copyBtn" class="btn primary" type="button">Kopieren</button>
+          <button id="newBtn" class="btn" type="button">Neu flechten</button>
+          <button id="eyeBtn" class="btn ghost" type="button" aria-pressed="false">Verbergen</button>
+        </div>
+      </div>
+
+      <details id="braid" class="braid">
+        <summary>Geflecht ansehen</summary>
+        <div class="braid-body">
+          <div class="strand-row"><span class="tag m">Maschine</span><code id="rowM"></code></div>
+          <div class="strand-row"><span class="tag h">Hand</span><code id="rowH"></code></div>
+          <div class="strand-row"><span class="tag z">Zeit</span><code id="rowZ"></code></div>
+          <div class="strand-row sum"><span class="tag f">= Passwort</span><code id="rowF"></code></div>
+          <p class="braid-note" id="braidNote"></p>
+        </div>
+      </details>
+
+      <form id="opts" class="opts" autocomplete="off">
+        <div class="len">
+          <span class="len-head"><label for="len">Länge <b id="lenOut">40</b></label><button id="overkill" class="link small" type="button">Unnötig sicher →</button></span>
+          <input id="len" type="range" min="8" max="128" value="40">
+        </div>
+        <fieldset class="classes">
+          <legend class="sr">Zeichenarten</legend>
+          <label><input type="checkbox" name="cls" value="lower" checked> a–z</label>
+          <label><input type="checkbox" name="cls" value="upper" checked> A–Z</label>
+          <label><input type="checkbox" name="cls" value="digits" checked> 0–9</label>
+          <label><input type="checkbox" name="cls" value="symbols" checked> !#%&amp;</label>
+          <label class="amb"><input type="checkbox" id="amb"> ohne l 1 I O 0</label>
+        </fieldset>
+      </form>
+    </section>
+
+    <section class="card strength" aria-label="Stärke">
+      <div class="bits">
+        <span id="bits" class="big">–</span>
+        <span class="unit">Bit Entropie</span>
+      </div>
+      <p id="energyText" class="energy-text"></p>
+      <div class="scale" id="scale" aria-hidden="true">
+        <div class="scale-track"><i id="scaleFill"></i></div>
+        <div class="scale-marks" id="scaleMarks"></div>
+      </div>
+    </section>
+
+    <section class="how" id="how">
+      <h2>Wie TRIBRAID funktioniert</h2>
+      <p class="how-lede">Die meisten Generatoren vertrauen genau einer Zufallsquelle. TRIBRAID vertraut keiner davon. Es nimmt drei unabhängige Quellen, schickt jede durch eine andere Kryptofamilie und verflicht sie Zeichen für Zeichen. Das Passwort ist perfekt zufällig, solange <em>auch nur einer</em> der drei Stränge echt zufällig ist.</p>
+
+      <figure class="diagram">
+        <svg class="dia-wide" viewBox="0 0 640 220" role="img" aria-labelledby="diaTitle">
+          <title id="diaTitle">Drei Stränge werden zu einem Passwort verflochten</title>
+          <g class="dia-box"><rect x="8" y="14" width="150" height="44" rx="10"/><text x="83" y="34">Maschine</text><text x="83" y="49" class="sub">Betriebssystem-CSPRNG</text></g>
+          <g class="dia-box"><rect x="8" y="88" width="150" height="44" rx="10"/><text x="83" y="108">Hand</text><text x="83" y="123" class="sub">Bewegung → AES-256-CTR</text></g>
+          <g class="dia-box"><rect x="8" y="162" width="150" height="44" rx="10"/><text x="83" y="182">Zeit</text><text x="83" y="197" class="sub">CPU-Jitter → HMAC-SHA-512</text></g>
+          <path class="dia-m" d="M158 36 C 215 36, 215 160, 255 150 S 300 110, 340 110"/>
+          <path class="dia-z" d="M158 184 C 215 184, 215 60, 255 70 S 300 110, 340 110"/>
+          <path class="dia-h" d="M158 110 C 190 110, 205 135, 230 110 S 270 85, 290 110 S 320 110, 340 110"/>
+          <g class="dia-box key"><rect x="340" y="84" width="128" height="52" rx="10"/><text x="404" y="106">Verflechtung</text><text x="404" y="122" class="sub">(m + h + z) mod n</text></g>
+          <path class="dia-f" d="M468 110 H 500"/>
+          <g class="dia-box key"><rect x="500" y="84" width="132" height="52" rx="10"/><text x="566" y="106">Exakt gleichverteilt</text><text x="566" y="122" class="sub">ganzes Wort verwerfen</text></g>
+        </svg>
+        <svg class="dia-narrow" viewBox="0 0 340 322" role="img" aria-labelledby="diaTitle2">
+          <title id="diaTitle2">Drei Stränge werden zu einem Passwort verflochten</title>
+          <g class="dia-box"><rect x="2" y="6" width="106" height="50" rx="10"/><text x="55" y="27">Maschine</text><text x="55" y="43" class="sub">OS-CSPRNG</text></g>
+          <g class="dia-box"><rect x="117" y="6" width="106" height="50" rx="10"/><text x="170" y="27">Hand</text><text x="170" y="43" class="sub">AES-256-CTR</text></g>
+          <g class="dia-box"><rect x="232" y="6" width="106" height="50" rx="10"/><text x="285" y="27">Zeit</text><text x="285" y="43" class="sub">HMAC-SHA-512</text></g>
+          <path class="dia-m" d="M55 56 C 55 110, 245 100, 205 140 S 170 170, 170 186"/>
+          <path class="dia-z" d="M285 56 C 285 110, 95 100, 135 140 S 170 170, 170 186"/>
+          <path class="dia-h" d="M170 56 C 170 85, 140 95, 170 115 S 200 150, 170 186"/>
+          <g class="dia-box key"><rect x="90" y="186" width="160" height="50" rx="10"/><text x="170" y="207">Verflechtung</text><text x="170" y="223" class="sub">(m + h + z) mod n</text></g>
+          <path class="dia-f" d="M170 236 V 266"/>
+          <g class="dia-box key"><rect x="90" y="266" width="160" height="50" rx="10"/><text x="170" y="287">Exakt gleichverteilt</text><text x="170" y="303" class="sub">ganzes Wort verwerfen</text></g>
+        </svg>
+      </figure>
+
+      <ol class="steps">
+        <li><b>Drei unabhängige Quellen.</b> Der Zufallsgenerator deines Betriebssystems, die Mikro-Unregelmäßigkeiten deiner Hand (Position, Zeitpunkt, Druck) und das Takt-Zittern deiner CPU.</li>
+        <li><b>Drei verschiedene Kryptofamilien.</b> Der Maschinen-Strang bleibt roh. Der Hand-Strang wird per HKDF-SHA-256 zu einem AES-256-Schlüssel und läuft im Zählermodus. Der Zeit-Strang läuft durch HMAC-SHA-512. Selbst wenn eine dieser Familien eines Tages gebrochen würde, stehen die anderen noch.</li>
+        <li><b>Unverzerrte Zeichenwahl.</b> Jeder Strang wählt seine Zeichen per Rejection Sampling. Es gibt keinen Modulo-Bias, kein Zeichen kommt auch nur minimal häufiger vor.</li>
+        <li><b>Die Verflechtung.</b> Position für Position werden die drei Zeichen-Indizes addiert (mod Alphabetgröße). Wie beim One-Time-Pad gilt: Ist auch nur ein Summand gleichverteilt und von den anderen unabhängig, ist es die Summe auch.</li>
+        <li><b>Exakte Gleichverteilung mit Regeln.</b> Viele Generatoren erzwingen „mindestens eine Ziffer“, indem sie eine einfügen, und verraten damit Struktur. TRIBRAID verwirft stattdessen das ganze Wort, bis alle Regeln erfüllt sind. So ist jedes gültige Passwort exakt gleich wahrscheinlich.</li>
+        <li><b>Exakte Entropie.</b> Die angezeigte Bitzahl ist nicht geschätzt. Sie wird per Inklusion–Exklusion als exakte Anzahl aller gültigen Passwörter berechnet.</li>
+        <li><b>Misstrauen gegenüber dem eigenen Browser.</b> Vor dem ersten Passwort prüft die Seite SHA-256, HMAC-SHA-512, HKDF und AES-256 gegen offizielle Testvektoren (NIST, RFC) und testet den Zufall statistisch. Erst wenn alles stimmt, wird generiert.</li>
+      </ol>
+
+      <aside class="honest">
+        <h3>Ehrlich gesagt</h3>
+        <p>Neu an TRIBRAID ist die <em>Konstruktion</em>: drei Quellen, drei Kryptofamilien, zeichenweise Verflechtung, exakte Gleichverteilung unter Regeln und ein Selbsttest beim Start. Die Bausteine selbst sind bewusst nicht neu erfunden. Das sind standardisierte, jahrzehntelang geprüfte Primitive. Eigene Verschlüsselungs-Grundbausteine zu erfinden ist der klassischste Fehler der Kryptographie. Gute Sicherheit entsteht durch kluges Kombinieren von Bewährtem.</p>
+        <p>Alles passiert lokal in deinem Browser. Die Seite verbietet sich per Content-Security-Policy selbst jede Netzwerkverbindung.</p>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>TRIBRAID v1 · läuft vollständig offline · kein Tracking, keine Cookies</span>
+  </footer>
+
+  <script src="js/tribraid.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

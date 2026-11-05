@@ -1,0 +1,12 @@
+{
+  "name": "safer-ever-net-tribraid",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TRIBRAID: Passwörter aus drei unabhängigen, verflochtenen Zufallssträngen",
+  "scripts": {
+    "test": "node --test tests/tribraid.test.js",
+    "start": "python3 -m http.server 8080"
+  },
+  "engines": { "node": ">=19" },
+  "license": "MIT"
+}
