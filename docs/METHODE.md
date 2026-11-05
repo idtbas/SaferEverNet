@@ -133,6 +133,11 @@ Allein ein Zähler, der 2^H Zustände durchläuft, braucht also mindestens
 262 Bit → ≈ 10⁵⁶ J (10¹²-mal die Lebensenergie der Sonne).
 655 Bit → ≈ 10¹⁷⁴ J (10¹⁰⁴-mal das Universum).
 
+Ab ≈ 308 Bit (47 Zeichen aus 94) übersteigt die Energie die gesamte Masse-Energie des
+beobachtbaren Universums. Genau ab dort zeigt die Seite die Bewertung „Unnötig sicher“.
+Zusätzlich nennt sie die mittlere Ratezeit bei 10¹² Versuchen pro Sekunde
+(Hälfte des Suchraums), weil diese Größe für kürzere Passwörter anschaulicher ist.
+
 Ehrlicher Hinweis: Ab etwa 128 Bit ist ein Passwort gegen Durchprobieren bereits
 praktisch unangreifbar. Alles darüber ist, wie der Name sagt, *unnötig*. Es schadet aber nicht.
 Gegen Quantencomputer (Grover) halbiert sich die effektive Bitzahl. 262 Bit bleiben auch

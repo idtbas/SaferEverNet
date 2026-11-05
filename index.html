@@ -2,151 +2,363 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+        content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark light">
   <title>SaferEverNet</title>
-  <meta name="description" content="TRIBRAID – Passwörter aus drei unabhängigen, miteinander verflochtenen Zufallssträngen.">
+  <meta name="description" content="TRIBRAID: Passwörter aus drei unabhängigen, Zeichen für Zeichen verflochtenen Zufallssträngen. Läuft lokal im Browser.">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2317171a'/%3E%3Cpath d='M8 10c8 0 8 12 16 12M8 22c8 0 8-12 16-12M8 16h16' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23090C14'/%3E%3Cg fill='none' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M5 10c6 0 8 12 11 12s5-12 11-12' stroke='%238A84FF'/%3E%3Cpath d='M5 22c6 0 8-12 11-12s5 12 11 12' stroke='%23FFA05A'/%3E%3Cpath d='M5 16c5 0 7-3 11 0s6 3 11 0' stroke='%2334DCC8'/%3E%3C/g%3E%3C/svg%3E">
 </head>
 <body>
-  <header class="top">
-    <a class="brand" href="#">
-      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M6 10c10 0 10 12 20 12" class="s-m"/>
-        <path d="M6 22c10 0 10-12 20-12" class="s-h"/>
-        <path d="M6 16h20" class="s-z"/>
-      </svg>
-      SaferEverNet
-    </a>
-    <button id="selftest" class="chip" type="button" aria-expanded="false" aria-controls="testList">Selbsttest läuft …</button>
-  </header>
-  <div class="testwrap"><ul id="testList" class="testlist" hidden></ul></div>
+  <div class="atmos" aria-hidden="true"></div>
 
-  <main class="wrap">
-    <section class="hero">
-      <h1>Ein Passwort, das niemand erraten kann.</h1>
-      <p class="lede">Nicht einmal mit der Energie einer Galaxie.</p>
-    </section>
+  <!-- Symbole -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 9V6.5A2.5 2.5 0 0 0 12.5 4h-6A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15H9"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20.5V16h-4.5"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.1 3.9"/><path d="M6.6 6.7C3.9 8.4 2.5 12 2.5 12S6 18.5 12 18.5a9 9 0 0 0 4.5-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.7-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.8-7.5-9.5V6z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.6v.1"/></symbol>
+    <symbol id="i-offline" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.8a10 10 0 0 1 4.2-2.4"/><path d="M14.8 10.4a10 10 0 0 1 4.2 2.4"/><path d="M2 9.2a15 15 0 0 1 4.6-2.9"/><path d="M11 5.6a15 15 0 0 1 11 3.6"/><path d="M12 20h.01"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2.5L4.5 13.5h6.5l-1 8 8.5-11h-6.5z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+    <symbol id="i-sunlife" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M19.6 9.4A8 8 0 1 0 20 13.5"/><path d="M20.2 5.2v4.4h-4.4"/></symbol>
+    <symbol id="i-galaxy" viewBox="0 0 24 24"><path d="M12 12c0-1.7 1.6-2.6 3-2 2 .9 2.3 3.6 1 5.3-1.8 2.3-5.4 2.4-7.5.5-2.6-2.4-2.4-6.6.3-9 3.3-2.8 8.3-2.4 11 1"/><path d="M12 12c0 1.7-1.6 2.6-3 2-2-.9-2.3-3.6-1-5.3"/></symbol>
+    <symbol id="i-universe" viewBox="0 0 24 24"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/><path d="M5.5 15l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/></symbol>
+    <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M5 3.5l13 5.5-5.5 2-2 5.5z"/><path d="M13.5 13.5l5.5 5.5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3.5l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M9 9h.01M15 9h.01M12 12h.01M9 15h.01M15 15h.01"/></symbol>
+    <symbol id="i-braid" viewBox="0 0 24 24"><path d="M3 7c4.5 0 4.5 10 9 10s4.5-10 9-10"/><path d="M3 17c4.5 0 4.5-10 9-10s4.5 10 9 10"/><path d="M3 12h18"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7.5V19l-4 1.5v-8z"/></symbol>
+    <symbol id="i-sigma" viewBox="0 0 24 24"><path d="M17 5H7l5.5 7L7 19h10"/></symbol>
+    <symbol id="i-erase" viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10 11v5M14 11v5"/></symbol>
+    <symbol id="i-sources" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.5"/><circle cx="18" cy="7" r="2.5"/><circle cx="12" cy="17.5" r="2.5"/><path d="M8 8.5l2.5 6.5M16 8.5l-2.5 6.5"/></symbol>
+  </svg>
 
-    <section class="card" aria-label="Passwort-Generator">
-      <!-- Phase 1: Bewegung sammeln -->
-      <div id="pad" class="pad">
-        <canvas id="padCanvas" aria-hidden="true"></canvas>
-        <div class="pad-hint">
-          <strong>Kritzel hier herum</strong>
-          <span>Mit Maus oder Finger. Deine Bewegung wird zu einem der drei Stränge.</span>
-          <div class="meter" aria-hidden="true"><i id="padMeter"></i></div>
-          <span id="padStatus" class="pad-status" aria-live="polite">0 %</span>
-          <button id="skipPad" class="link" type="button">ohne Kritzeln weiter</button>
-        </div>
-      </div>
-
-      <!-- Phase 2: Ergebnis -->
-      <div id="result" class="result" hidden>
-        <output id="password" class="password" aria-live="polite"></output>
-        <div class="actions">
-          <button id="copyBtn" class="btn primary" type="button">Kopieren</button>
-          <button id="newBtn" class="btn" type="button">Neu flechten</button>
-          <button id="eyeBtn" class="btn ghost" type="button" aria-pressed="false">Verbergen</button>
-        </div>
-      </div>
-
-      <details id="braid" class="braid">
-        <summary>Geflecht ansehen</summary>
-        <div class="braid-body">
-          <div class="strand-row"><span class="tag m">Maschine</span><code id="rowM"></code></div>
-          <div class="strand-row"><span class="tag h">Hand</span><code id="rowH"></code></div>
-          <div class="strand-row"><span class="tag z">Zeit</span><code id="rowZ"></code></div>
-          <div class="strand-row sum"><span class="tag f">= Passwort</span><code id="rowF"></code></div>
-          <p class="braid-note" id="braidNote"></p>
-        </div>
-      </details>
-
-      <form id="opts" class="opts" autocomplete="off">
-        <div class="len">
-          <span class="len-head"><label for="len">Länge <b id="lenOut">40</b></label><button id="overkill" class="link small" type="button">Unnötig sicher →</button></span>
-          <input id="len" type="range" min="8" max="128" value="40">
-        </div>
-        <fieldset class="classes">
-          <legend class="sr">Zeichenarten</legend>
-          <label><input type="checkbox" name="cls" value="lower" checked> a–z</label>
-          <label><input type="checkbox" name="cls" value="upper" checked> A–Z</label>
-          <label><input type="checkbox" name="cls" value="digits" checked> 0–9</label>
-          <label><input type="checkbox" name="cls" value="symbols" checked> !#%&amp;</label>
-          <label class="amb"><input type="checkbox" id="amb"> ohne l 1 I O 0</label>
-        </fieldset>
-      </form>
-    </section>
-
-    <section class="card strength" aria-label="Stärke">
-      <div class="bits">
-        <span id="bits" class="big">–</span>
-        <span class="unit">Bit Entropie</span>
-      </div>
-      <p id="energyText" class="energy-text"></p>
-      <div class="scale" id="scale" aria-hidden="true">
-        <div class="scale-track"><i id="scaleFill"></i></div>
-        <div class="scale-marks" id="scaleMarks"></div>
-      </div>
-    </section>
-
-    <section class="how" id="how">
-      <h2>Wie TRIBRAID funktioniert</h2>
-      <p class="how-lede">Die meisten Generatoren vertrauen genau einer Zufallsquelle. TRIBRAID vertraut keiner davon. Es nimmt drei unabhängige Quellen, schickt jede durch eine andere Kryptofamilie und verflicht sie Zeichen für Zeichen. Das Passwort ist perfekt zufällig, solange <em>auch nur einer</em> der drei Stränge echt zufällig ist.</p>
-
-      <figure class="diagram">
-        <svg class="dia-wide" viewBox="0 0 640 220" role="img" aria-labelledby="diaTitle">
-          <title id="diaTitle">Drei Stränge werden zu einem Passwort verflochten</title>
-          <g class="dia-box"><rect x="8" y="14" width="150" height="44" rx="10"/><text x="83" y="34">Maschine</text><text x="83" y="49" class="sub">Betriebssystem-CSPRNG</text></g>
-          <g class="dia-box"><rect x="8" y="88" width="150" height="44" rx="10"/><text x="83" y="108">Hand</text><text x="83" y="123" class="sub">Bewegung → AES-256-CTR</text></g>
-          <g class="dia-box"><rect x="8" y="162" width="150" height="44" rx="10"/><text x="83" y="182">Zeit</text><text x="83" y="197" class="sub">CPU-Jitter → HMAC-SHA-512</text></g>
-          <path class="dia-m" d="M158 36 C 215 36, 215 160, 255 150 S 300 110, 340 110"/>
-          <path class="dia-z" d="M158 184 C 215 184, 215 60, 255 70 S 300 110, 340 110"/>
-          <path class="dia-h" d="M158 110 C 190 110, 205 135, 230 110 S 270 85, 290 110 S 320 110, 340 110"/>
-          <g class="dia-box key"><rect x="340" y="84" width="128" height="52" rx="10"/><text x="404" y="106">Verflechtung</text><text x="404" y="122" class="sub">(m + h + z) mod n</text></g>
-          <path class="dia-f" d="M468 110 H 500"/>
-          <g class="dia-box key"><rect x="500" y="84" width="132" height="52" rx="10"/><text x="566" y="106">Exakt gleichverteilt</text><text x="566" y="122" class="sub">ganzes Wort verwerfen</text></g>
+  <header class="bar">
+    <div class="bar-in">
+      <a class="brand" href="#top" aria-label="SaferEverNet, nach oben">
+        <svg class="mark" id="mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path class="mk mk-m" d="M4 10c7 0 9 12 12 12s5-12 12-12"/>
+          <path class="mk mk-h" d="M4 22c7 0 9-12 12-12s5 12 12 12"/>
+          <path class="mk mk-z" d="M4 16c5 0 8-3.5 12 0s7 3.5 12 0"/>
         </svg>
-        <svg class="dia-narrow" viewBox="0 0 340 322" role="img" aria-labelledby="diaTitle2">
-          <title id="diaTitle2">Drei Stränge werden zu einem Passwort verflochten</title>
-          <g class="dia-box"><rect x="2" y="6" width="106" height="50" rx="10"/><text x="55" y="27">Maschine</text><text x="55" y="43" class="sub">OS-CSPRNG</text></g>
-          <g class="dia-box"><rect x="117" y="6" width="106" height="50" rx="10"/><text x="170" y="27">Hand</text><text x="170" y="43" class="sub">AES-256-CTR</text></g>
-          <g class="dia-box"><rect x="232" y="6" width="106" height="50" rx="10"/><text x="285" y="27">Zeit</text><text x="285" y="43" class="sub">HMAC-SHA-512</text></g>
-          <path class="dia-m" d="M55 56 C 55 110, 245 100, 205 140 S 170 170, 170 186"/>
-          <path class="dia-z" d="M285 56 C 285 110, 95 100, 135 140 S 170 170, 170 186"/>
-          <path class="dia-h" d="M170 56 C 170 85, 140 95, 170 115 S 200 150, 170 186"/>
-          <g class="dia-box key"><rect x="90" y="186" width="160" height="50" rx="10"/><text x="170" y="207">Verflechtung</text><text x="170" y="223" class="sub">(m + h + z) mod n</text></g>
-          <path class="dia-f" d="M170 236 V 266"/>
-          <g class="dia-box key"><rect x="90" y="266" width="160" height="50" rx="10"/><text x="170" y="287">Exakt gleichverteilt</text><text x="170" y="303" class="sub">ganzes Wort verwerfen</text></g>
+        <span>SaferEverNet</span>
+      </a>
+      <nav class="nav" aria-label="Seitenbereiche">
+        <a href="#methode">Methode</a>
+        <a href="#schutz">Schutz</a>
+      </nav>
+      <div class="status-wrap">
+        <button class="status" id="status" type="button" data-state="run" aria-expanded="false" aria-controls="statusPanel">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span class="status-text" id="statusText">Selbsttest läuft</span>
+        </button>
+        <div class="status-panel" id="statusPanel" hidden>
+          <div class="sp-head"><strong>Selbsttest beim Laden</strong><span class="sp-time" id="spTime"></span></div>
+          <ol class="sp-list" id="spList"></ol>
+          <p class="sp-note">Prüfwerte aus FIPS 180-4, RFC 4231, RFC 5869 und NIST SP 800-38A. Schlägt ein Test fehl, bleibt die Erzeugung gesperrt.</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="top">
+    <section class="hero">
+      <p class="eyebrow"><span class="tri" aria-hidden="true"><i class="m"></i><i class="h"></i><i class="z"></i></span>TRIBRAID · Dreistrang-Geflecht</p>
+      <h1 class="headline" id="headline">Ein Passwort, das niemand erraten kann.</h1>
+      <p class="lede">Drei unabhängige Zufallsquellen, Zeichen für Zeichen verflochten. Schon in der Standardeinstellung bräuchte selbst ein perfekter Computer mehr Energie, als die Sonne in ihrem ganzen Leben abstrahlt.</p>
+      <ul class="trust">
+        <li><svg class="ic" aria-hidden="true"><use href="#i-offline"/></svg>Läuft lokal, nichts verlässt dein Gerät</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>Selbsttest bei jedem Laden</li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-eyeoff"/></svg>Keine Cookies, kein Tracking</li>
+      </ul>
+    </section>
+
+    <div class="bench">
+      <section class="card gen" aria-label="Passwort-Generator">
+        <div class="stage" id="stage" data-phase="collect" tabindex="0"
+             aria-label="Entropie-Feld. Bewege Maus oder Finger darüber oder tippe auf der Tastatur."
+             aria-describedby="collectSub">
+          <canvas id="stageCanvas" aria-hidden="true"></canvas>
+          <div class="collect-ui" id="collectUi">
+            <div class="ring" id="ring" role="progressbar" aria-label="Gesammelte Bewegung" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" class="st-m"/><stop offset=".5" class="st-h"/><stop offset="1" class="st-z"/>
+                  </linearGradient>
+                </defs>
+                <circle class="ring-track" cx="60" cy="60" r="52"/>
+                <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="52"/>
+              </svg>
+              <span class="ring-num"><b id="ringPct">0</b><small>%</small></span>
+            </div>
+            <p class="collect-title" id="collectTitle">Kritzel hier herum</p>
+            <p class="collect-sub" id="collectSub">Deine Bewegung wird zum Hand-Strang. Mit der Tastatur geht es auch: einfach wild tippen.</p>
+            <button class="ghost-link" id="skipBtn" type="button">Ohne Kritzeln fortfahren</button>
+          </div>
+          <div class="legend" aria-hidden="true"><span class="lg-m">Maschine</span><span class="lg-h">Hand</span><span class="lg-z">Zeit</span></div>
+        </div>
+
+        <div class="pw-wrap" id="pwWrap">
+          <div class="pw-head">
+            <span class="label">Dein Passwort</span>
+            <span class="seal" id="seal" hidden>
+              <svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M12 14.5v2"/></svg>
+              <span id="sealText">Verflochten</span>
+            </span>
+          </div>
+          <div class="pw placeholder" id="password" tabindex="0" role="group" aria-label="Passwort" aria-live="polite" aria-busy="false"></div>
+          <div class="tip" id="tip" role="tooltip" hidden></div>
+          <p class="pw-hint" id="pwHint">Sobald der Ring voll ist, wird dein Passwort geflochten.</p>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="copyBtn" type="button" disabled>
+            <svg class="ic ic-copy" aria-hidden="true"><use href="#i-copy"/></svg>
+            <svg class="ic ic-done" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <span id="copyLabel">Kopieren</span>
+          </button>
+          <button class="btn" id="newBtn" type="button" disabled title="Neues Passwort flechten (Taste N)">
+            <svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>
+            <span>Neu flechten</span><kbd>N</kbd>
+          </button>
+          <button class="btn square" id="eyeBtn" type="button" aria-pressed="false" aria-label="Passwort verbergen" title="Passwort verbergen" disabled>
+            <svg class="ic ic-eye" aria-hidden="true"><use href="#i-eye"/></svg>
+            <svg class="ic ic-eyeoff" aria-hidden="true"><use href="#i-eyeoff"/></svg>
+          </button>
+        </div>
+
+        <div class="clip" id="clip" role="status" hidden>
+          <svg class="clip-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="cr-track" cx="18" cy="18" r="15"/><circle class="cr-fill" id="clipRing" cx="18" cy="18" r="15"/></svg>
+          <span class="clip-text" id="clipText">In der Zwischenablage.</span>
+          <span class="clip-actions">
+            <button class="ghost-link" id="clipNow" type="button">Jetzt leeren</button>
+            <button class="ghost-link" id="clipKeep" type="button">Behalten</button>
+          </span>
+        </div>
+
+        <form class="settings" id="opts" autocomplete="off">
+          <div class="field">
+            <span class="field-label" id="presetLabel">Stärke wählen</span>
+            <div class="seg" id="presets" role="radiogroup" aria-labelledby="presetLabel">
+              <i class="seg-ind" id="segInd" aria-hidden="true"></i>
+              <input type="radio" name="preset" id="pr16" value="16"><label for="pr16">Stark<small>16 Zeichen</small></label>
+              <input type="radio" name="preset" id="pr40" value="40" checked><label for="pr40">Extrem<small>40 Zeichen</small></label>
+              <input type="radio" name="preset" id="pr100" value="100"><label for="pr100" class="overkill">Unnötig sicher<small>100 Zeichen</small></label>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="len-top">
+              <label class="field-label" for="len">Länge</label>
+              <span class="len-val"><b id="lenVal">40</b> Zeichen</span>
+            </div>
+            <input id="len" type="range" min="8" max="128" value="40">
+          </div>
+
+          <fieldset class="field">
+            <legend class="field-label">Zeichenarten</legend>
+            <div class="chips">
+              <label class="chip"><input type="checkbox" name="cls" value="lower" checked><span><i class="box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>a–z</span></label>
+              <label class="chip"><input type="checkbox" name="cls" value="upper" checked><span><i class="box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>A–Z</span></label>
+              <label class="chip cd"><input type="checkbox" name="cls" value="digits" checked><span><i class="box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>0–9</span></label>
+              <label class="chip cs"><input type="checkbox" name="cls" value="symbols" checked><span><i class="box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>!#%&amp;</span></label>
+            </div>
+          </fieldset>
+
+          <label class="switch">
+            <input type="checkbox" id="amb">
+            <span class="sw" aria-hidden="true"></span>
+            <span>Verwechselbare Zeichen meiden <code>l 1 I | O 0 o</code></span>
+          </label>
+          <p class="opts-hint" id="optsHint" aria-live="polite"></p>
+        </form>
+
+        <details class="ledger-box" id="braid">
+          <summary>
+            <svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg>
+            <span>Geflecht im Detail</span>
+            <span class="sum-sub">alle drei Stränge, Stelle für Stelle</span>
+          </summary>
+          <div class="ledger-legend" aria-hidden="true"><span class="m">Maschine</span><span class="h">Hand</span><span class="z">Zeit</span><span class="f">= Passwort</span></div>
+          <div class="ledger" id="ledger"></div>
+          <p class="ledger-note" id="ledgerNote">Erzeuge zuerst ein Passwort.</p>
+        </details>
+      </section>
+
+      <aside class="card power" aria-labelledby="powerTitle">
+        <div class="power-head">
+          <h2 id="powerTitle">Stärke</h2>
+          <span class="rating" id="rating" data-level="4">Extrem stark</span>
+        </div>
+        <div class="bits">
+          <span class="bits-num" id="bits">0</span>
+          <span class="bits-unit">Bit Entropie<em>exakt berechnet</em></span>
+        </div>
+        <div class="power-text" id="energyText"></div>
+        <div class="ladder" id="ladder">
+          <div class="rail" aria-hidden="true"><i class="rail-fill" id="railFill"></i><i class="rail-head" id="railHead"></i></div>
+          <ol class="rungs" id="rungs" aria-label="Energievergleich, von groß nach klein"></ol>
+        </div>
+        <p class="fine">
+          <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+          <span>Grundlage ist die Landauer-Grenze bei 2,7 K, der Temperatur des Weltalls: Jede irreversible Bit-Operation kostet mindestens k·T·ln 2 Energie. Das ist eine physikalische Untergrenze, keine technische.</span>
+        </p>
+      </aside>
+    </div>
+
+    <section class="method" id="methode">
+      <div class="sec-head">
+        <p class="eyebrow">Die Methode</p>
+        <h2>So entsteht dein Passwort</h2>
+        <p>Die meisten Generatoren vertrauen genau einer Zufallsquelle. TRIBRAID vertraut keiner davon. Es reicht, wenn eine der drei Quellen echt zufällig ist.</p>
+      </div>
+
+      <figure class="flow">
+        <svg class="flow-wide" viewBox="0 0 760 236" role="img" aria-labelledby="flowT1">
+          <title id="flowT1">Drei Quellen laufen durch drei Kryptofamilien und werden zu einem Passwort verflochten</title>
+          <g class="node"><rect x="8" y="10" width="160" height="56" rx="12"/><use href="#i-cpu" x="22" y="26" width="24" height="24" class="ni m"/><text x="56" y="34">Maschine</text><text x="56" y="52" class="sub">Betriebssystem</text></g>
+          <g class="node"><rect x="8" y="90" width="160" height="56" rx="12"/><use href="#i-pointer" x="22" y="106" width="24" height="24" class="ni h"/><text x="56" y="114">Hand</text><text x="56" y="132" class="sub">deine Bewegung</text></g>
+          <g class="node"><rect x="8" y="170" width="160" height="56" rx="12"/><use href="#i-clock" x="22" y="186" width="24" height="24" class="ni z"/><text x="56" y="194">Zeit</text><text x="56" y="212" class="sub">CPU-Jitter</text></g>
+
+          <g class="node"><rect x="214" y="10" width="140" height="56" rx="12"/><text x="284" y="34" class="c">roh</text><text x="284" y="52" class="sub c">getRandomValues</text></g>
+          <g class="node"><rect x="214" y="90" width="140" height="56" rx="12"/><text x="284" y="114" class="c">AES-256-CTR</text><text x="284" y="132" class="sub c">via HKDF-SHA-256</text></g>
+          <g class="node"><rect x="214" y="170" width="140" height="56" rx="12"/><text x="284" y="194" class="c">HMAC-SHA-512</text><text x="284" y="212" class="sub c">Zählermodus</text></g>
+
+          <path class="fp m" d="M168 38H214"/><path class="fd m" d="M168 38H214"/>
+          <path class="fp h" d="M168 118H214"/><path class="fd h" d="M168 118H214"/>
+          <path class="fp z" d="M168 198H214"/><path class="fd z" d="M168 198H214"/>
+
+          <path class="fp m" d="M354 38C400 38 404 150 440 140S470 118 486 118"/><path class="fd m" d="M354 38C400 38 404 150 440 140S470 118 486 118"/>
+          <path class="fp z" d="M354 198C400 198 404 86 440 96S470 118 486 118"/><path class="fd z" d="M354 198C400 198 404 86 440 96S470 118 486 118"/>
+          <path class="fp h" d="M354 118C380 118 392 140 412 118S452 96 486 118"/><path class="fd h" d="M354 118C380 118 392 140 412 118S452 96 486 118"/>
+
+          <g class="node key"><rect x="486" y="88" width="128" height="60" rx="12"/><text x="550" y="113" class="c">Verflechtung</text><text x="550" y="131" class="sub c">(m + h + z) mod n</text></g>
+          <path class="fp f" d="M614 118H640"/><path class="fd f" d="M614 118H640"/>
+          <g class="node key"><rect x="640" y="88" width="112" height="60" rx="12"/><text x="696" y="113" class="c">Passwort</text><text x="696" y="131" class="sub c">exakt gleichverteilt</text></g>
+        </svg>
+        <svg class="flow-narrow" viewBox="0 0 340 430" role="img" aria-labelledby="flowT2">
+          <title id="flowT2">Drei Quellen laufen durch drei Kryptofamilien und werden zu einem Passwort verflochten</title>
+          <g class="node"><rect x="2" y="4" width="106" height="52" rx="12"/><text x="55" y="27" class="c">Maschine</text><text x="55" y="44" class="sub c">Betriebssystem</text></g>
+          <g class="node"><rect x="117" y="4" width="106" height="52" rx="12"/><text x="170" y="27" class="c">Hand</text><text x="170" y="44" class="sub c">Bewegung</text></g>
+          <g class="node"><rect x="232" y="4" width="106" height="52" rx="12"/><text x="285" y="27" class="c">Zeit</text><text x="285" y="44" class="sub c">CPU-Jitter</text></g>
+          <path class="fp m" d="M55 56V92"/><path class="fd m" d="M55 56V92"/>
+          <path class="fp h" d="M170 56V92"/><path class="fd h" d="M170 56V92"/>
+          <path class="fp z" d="M285 56V92"/><path class="fd z" d="M285 56V92"/>
+          <g class="node"><rect x="2" y="92" width="106" height="52" rx="12"/><text x="55" y="115" class="c">roh</text><text x="55" y="132" class="sub c">CSPRNG</text></g>
+          <g class="node"><rect x="117" y="92" width="106" height="52" rx="12"/><text x="170" y="115" class="c">AES-256</text><text x="170" y="132" class="sub c">CTR</text></g>
+          <g class="node"><rect x="232" y="92" width="106" height="52" rx="12"/><text x="285" y="115" class="c">HMAC</text><text x="285" y="132" class="sub c">SHA-512</text></g>
+          <path class="fp m" d="M55 144C55 200 245 190 205 232S170 262 170 278"/><path class="fd m" d="M55 144C55 200 245 190 205 232S170 262 170 278"/>
+          <path class="fp z" d="M285 144C285 200 95 190 135 232S170 262 170 278"/><path class="fd z" d="M285 144C285 200 95 190 135 232S170 262 170 278"/>
+          <path class="fp h" d="M170 144C170 176 140 188 170 208S200 248 170 278"/><path class="fd h" d="M170 144C170 176 140 188 170 208S200 248 170 278"/>
+          <g class="node key"><rect x="85" y="278" width="170" height="56" rx="12"/><text x="170" y="301" class="c">Verflechtung</text><text x="170" y="319" class="sub c">(m + h + z) mod n</text></g>
+          <path class="fp f" d="M170 334V368"/><path class="fd f" d="M170 334V368"/>
+          <g class="node key"><rect x="85" y="368" width="170" height="56" rx="12"/><text x="170" y="391" class="c">Passwort</text><text x="170" y="409" class="sub c">exakt gleichverteilt</text></g>
         </svg>
       </figure>
 
       <ol class="steps">
-        <li><b>Drei unabhängige Quellen.</b> Der Zufallsgenerator deines Betriebssystems, die Mikro-Unregelmäßigkeiten deiner Hand (Position, Zeitpunkt, Druck) und das Takt-Zittern deiner CPU.</li>
-        <li><b>Drei verschiedene Kryptofamilien.</b> Der Maschinen-Strang bleibt roh. Der Hand-Strang wird per HKDF-SHA-256 zu einem AES-256-Schlüssel und läuft im Zählermodus. Der Zeit-Strang läuft durch HMAC-SHA-512. Selbst wenn eine dieser Familien eines Tages gebrochen würde, stehen die anderen noch.</li>
-        <li><b>Unverzerrte Zeichenwahl.</b> Jeder Strang wählt seine Zeichen per Rejection Sampling. Es gibt keinen Modulo-Bias, kein Zeichen kommt auch nur minimal häufiger vor.</li>
-        <li><b>Die Verflechtung.</b> Position für Position werden die drei Zeichen-Indizes addiert (mod Alphabetgröße). Wie beim One-Time-Pad gilt: Ist auch nur ein Summand gleichverteilt und von den anderen unabhängig, ist es die Summe auch.</li>
-        <li><b>Exakte Gleichverteilung mit Regeln.</b> Viele Generatoren erzwingen „mindestens eine Ziffer“, indem sie eine einfügen, und verraten damit Struktur. TRIBRAID verwirft stattdessen das ganze Wort, bis alle Regeln erfüllt sind. So ist jedes gültige Passwort exakt gleich wahrscheinlich.</li>
-        <li><b>Exakte Entropie.</b> Die angezeigte Bitzahl ist nicht geschätzt. Sie wird per Inklusion–Exklusion als exakte Anzahl aller gültigen Passwörter berechnet.</li>
-        <li><b>Misstrauen gegenüber dem eigenen Browser.</b> Vor dem ersten Passwort prüft die Seite SHA-256, HMAC-SHA-512, HKDF und AES-256 gegen offizielle Testvektoren (NIST, RFC) und testet den Zufall statistisch. Erst wenn alles stimmt, wird generiert.</li>
+        <li class="step"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><h3>Selbsttest</h3><p>Bevor etwas erzeugt wird, prüft die Seite SHA-256, HMAC-SHA-512, HKDF und AES-256 gegen offizielle Prüfwerte und testet den Zufall statistisch.</p></li>
+        <li class="step"><svg class="ic" aria-hidden="true"><use href="#i-sources"/></svg><h3>Drei Quellen</h3><p>Der Zufallsgenerator deines Betriebssystems, die Mikro-Unregelmäßigkeiten deiner Hand und das Takt-Zittern deiner CPU.</p></li>
+        <li class="step"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg><h3>Drei Kryptofamilien</h3><p>Maschine bleibt roh, Hand läuft durch AES-256-CTR, Zeit durch HMAC-SHA-512. Ein Durchbruch gegen eine Familie trifft höchstens einen Strang.</p></li>
+        <li class="step"><svg class="ic" aria-hidden="true"><use href="#i-dice"/></svg><h3>Unverzerrte Zeichenwahl</h3><p>Jeder Strang wählt seine Zeichen per Rejection Sampling. Kein Modulo-Bias: Jedes Zeichen ist exakt gleich wahrscheinlich.</p></li>
+        <li class="step"><svg class="ic" aria-hidden="true"><use href="#i-braid"/></svg><h3>Verflechtung</h3><p>Stelle für Stelle werden die drei Zeichen-Indizes addiert, modulo Alphabetgröße. Wie beim One-Time-Pad bleibt die Summe gleichverteilt.</p></li>
+        <li class="step"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg><h3>Regeln ohne Struktur-Leck</h3><p>Fehlt eine Zeichenart, wird das ganze Wort verworfen statt ein Zeichen einzuschieben. Jedes gültige Passwort bleibt gleich wahrscheinlich.</p></li>
+        <li class="step"><svg class="ic" aria-hidden="true"><use href="#i-sigma"/></svg><h3>Exakte Entropie</h3><p>Die Bitzahl wird per Inklusion–Exklusion mit ganzen Zahlen gezählt. Nichts daran ist geschätzt.</p></li>
+        <li class="step"><svg class="ic" aria-hidden="true"><use href="#i-erase"/></svg><h3>Spuren löschen</h3><p>Zwischenpuffer, Schlüsselmaterial und alte Pools werden nach Gebrauch mit Nullen überschrieben.</p></li>
       </ol>
 
-      <aside class="honest">
-        <h3>Ehrlich gesagt</h3>
-        <p>Neu an TRIBRAID ist die <em>Konstruktion</em>: drei Quellen, drei Kryptofamilien, zeichenweise Verflechtung, exakte Gleichverteilung unter Regeln und ein Selbsttest beim Start. Die Bausteine selbst sind bewusst nicht neu erfunden. Das sind standardisierte, jahrzehntelang geprüfte Primitive. Eigene Verschlüsselungs-Grundbausteine zu erfinden ist der klassischste Fehler der Kryptographie. Gute Sicherheit entsteht durch kluges Kombinieren von Bewährtem.</p>
-        <p>Alles passiert lokal in deinem Browser. Die Seite verbietet sich per Content-Security-Policy selbst jede Netzwerkverbindung.</p>
-      </aside>
+      <div class="theorem">
+        <div class="thm-text">
+          <p class="eyebrow">Der Geflecht-Satz</p>
+          <p class="formula"><span class="f">F</span> = (<span class="m">M</span> + <span class="h">H</span> + <span class="z">Z</span>) mod <i>n</i></p>
+          <p>Sind die drei Stränge unabhängig und ist auch nur einer davon gleichverteilt, dann ist das Passwort gleichverteilt. Der Grund: Für feste Werte von H und Z ist die Abbildung m ↦ m + h + z eine Bijektion auf ℤ<sub>n</sub>. Ein Angreifer, der zwei Stränge kennt, erfährt nichts.</p>
+        </div>
+        <div class="thm-demo" id="thmDemo" aria-live="polite">
+          <p class="thm-cap" id="thmCap">Beispiel</p>
+          <div class="thm-eq" id="thmEq">
+            <span class="g m">k</span><span class="op">+</span><span class="g h">$</span><span class="op">+</span><span class="g z">r</span><span class="op">=</span><span class="g f">}</span>
+          </div>
+          <p class="thm-math" id="thmMath">(10 + 65 + 17) mod 94 = 92</p>
+        </div>
+      </div>
+
+      <div class="duo">
+        <div class="duo-card">
+          <h3>Neu an TRIBRAID</h3>
+          <ul>
+            <li>Drei Quellen und drei verschiedene Kryptofamilien in einem Verfahren</li>
+            <li>Verflechtung auf Zeichenebene, sichtbar und nachprüfbar</li>
+            <li>Exakte Gleichverteilung trotz Pflicht-Zeichenarten</li>
+            <li>Exakte statt geschätzte Entropie, physikalisch eingeordnet</li>
+            <li>Selbsttest mit offiziellen Prüfwerten, bevor etwas erzeugt wird</li>
+          </ul>
+        </div>
+        <div class="duo-card">
+          <h3>Bewusst bewährt</h3>
+          <ul>
+            <li>SHA-2, HMAC, HKDF und AES statt selbst erfundener Grundbausteine</li>
+            <li>Der Zufallsgenerator des Betriebssystems als einer von drei Strängen</li>
+            <li>Die Web-Crypto-Schnittstelle deines Browsers</li>
+            <li>Mehrere Quellen zu kombinieren ist in der Kryptographie bekannt. Neu ist diese Konstruktion.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="shield" id="schutz">
+      <div class="sec-head">
+        <p class="eyebrow">Ehrliches Bedrohungsmodell</p>
+        <h2>Wogegen TRIBRAID schützt</h2>
+      </div>
+      <div class="duo">
+        <div class="duo-card good">
+          <h3><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>Schützt gegen</h3>
+          <ul>
+            <li>einen schwachen oder manipulierten Zufallsgenerator im Betriebssystem</li>
+            <li>vorhersagbare oder gefälschte Bewegungsdaten</li>
+            <li>einen Durchbruch gegen eine einzelne Kryptofamilie</li>
+            <li>verzerrte Zeichenverteilung und Struktur durch Pflichtzeichen</li>
+            <li>Datenabfluss: Die Seite baut keine Netzwerkverbindungen auf</li>
+          </ul>
+        </div>
+        <div class="duo-card limit">
+          <h3><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>Kann keine Webseite verhindern</h3>
+          <ul>
+            <li>Schadsoftware, Keylogger oder bösartige Browser-Erweiterungen auf deinem Gerät</li>
+            <li>Zwischenablage-Programme, die Kopiertes speichern. Deshalb leert die Seite die Zwischenablage nach 60 Sekunden.</li>
+            <li>Passwort-Wiederverwendung. Nimm für jeden Dienst ein eigenes Passwort und speichere es in einem Passwort-Manager.</li>
+          </ul>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer class="foot">
-    <span>TRIBRAID v1 · läuft vollständig offline · kein Tracking, keine Cookies</span>
+    <div class="foot-in">
+      <span class="foot-brand">
+        <svg class="mark small" viewBox="0 0 32 32" aria-hidden="true">
+          <path class="mk mk-m" d="M4 10c7 0 9 12 12 12s5-12 12-12"/>
+          <path class="mk mk-h" d="M4 22c7 0 9-12 12-12s5 12 12 12"/>
+          <path class="mk mk-z" d="M4 16c5 0 8-3.5 12 0s7 3.5 12 0"/>
+        </svg>
+        SaferEverNet · TRIBRAID v1
+      </span>
+      <span>Läuft vollständig offline. Schriften: Mona Sans und JetBrains Mono (SIL Open Font License).</span>
+    </div>
   </footer>
 
   <script src="js/tribraid.js"></script>
+  <script src="js/fx.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

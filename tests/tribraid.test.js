@@ -44,6 +44,8 @@ test('Geflecht-Satz: Addition mod n ist für jedes feste (h, z) eine Bijektion',
 test('Jedes Zeichen ist exakt die Verflechtung der drei Stränge', async () => {
   const r = await T.generate({ length: 128, classes: ALL, handEntropy: te.encode('h'), timeEntropy: te.encode('z') });
   const { alphabet } = T.buildAlphabet(ALL, false);
+  assert.equal(r.alphabet, alphabet.join(''));
+  assert.equal(r.alphabetSize, alphabet.length);
   const idx = new Map(alphabet.map((c, i) => [c, i]));
   for (let i = 0; i < 128; i++) {
     assert.equal((idx.get(r.strands.M[i]) + idx.get(r.strands.H[i]) + idx.get(r.strands.Z[i])) % alphabet.length, idx.get(r.password[i]));

@@ -256,6 +256,7 @@
       return {
         password: toStr(f),
         strands: { M: toStr(m), H: toStr(h), Z: toStr(z) },
+        alphabet: alphabet.join(''),
         alphabetSize: n,
         attempts,
         bytesUsed: { M: M.used, H: H.used, Z: Z.used },
