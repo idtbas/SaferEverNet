@@ -24,11 +24,16 @@
     eventsTotal: 0,
     score: 0,
     masked: false,
+    locked: false,          // kostenlose Version: Passwort verschwommen (siehe abo.js)
     current: null,
     activeIdx: -1,
     lastBits: 0,
   };
   const TARGET = 160;       // so viele Bewegungspunkte füllen den Ring
+  // Verdeckt = verborgen ODER (kostenlos) verschwommen. Dann zeigen auch Seil,
+  // Tooltip, Geflecht-Ansicht und Geflecht-Satz keine Zeichen, die das Passwort verraten.
+  const veiled = () => state.masked || state.locked;
+  let inited = false;
   let stage = null;
   let readyPromise = Promise.resolve(false);
 
@@ -263,11 +268,10 @@
     st.dataset.phase = 'rope';
     try { reveal(await result); } catch (e) { showError(e); }
     setActions(true);
-    $('pwHint').textContent = window.matchMedia('(hover: none)').matches
-      ? 'Tipp: Tippe auf ein Zeichen, um seine Verflechtung zu sehen.'
-      : 'Tipp: Fahr über ein Zeichen oder wähle es mit den Pfeiltasten, um seine Verflechtung zu sehen.';
+    setHint();
     if (hadFocus) $('copyBtn').focus({ preventScroll: true });
     bringIntoView();
+    if (window.Abo) window.Abo.onFirstPassword();
     state.busy = false;
     if (state.again) { state.again = false; regenerate(); }
   }
@@ -296,12 +300,19 @@
       time.fill(0);
     }
   }
-  async function regenerate() {
+  async function regenerate(force) {
     if (!state.ready || state.phase !== 'rope') return;
     if (state.busy) { state.again = true; return; }
+    if (force !== true && window.Abo && window.Abo.needsGateForGenerate()) {
+      window.Abo.gate('generate', () => regenerate(true));
+      return;
+    }
     state.busy = true;
     FX.restart($('newBtn'), 'turn');
-    try { reveal(await compute()); } catch (e) { showError(e); }
+    try {
+      reveal(await compute());
+      if (window.Abo) window.Abo.countGeneration();
+    } catch (e) { showError(e); }
     finally {
       state.busy = false;
       if (state.again) { state.again = false; regenerate(); }
@@ -313,7 +324,7 @@
   function reveal(r) {
     state.current = r;
     hideTip();
-    stage.spin(state.masked ? null : r.strands);
+    stage.spin(veiled() ? null : r.strands);
     FX.restart($('mark'), 'pulse');
     if (state.masked) renderMasked(r); else renderReels(r);
     ledgerDirty = true;
@@ -418,7 +429,7 @@
   }
   function showTip(i) {
     const r = state.current;
-    if (!r || state.masked) return;
+    if (!r || veiled()) return;
     const out = $('password');
     const c = out.querySelector(`.ch[data-i="${i}"]`);
     if (!c) return;
@@ -462,7 +473,7 @@
     });
     out.addEventListener('keydown', (e) => {
       const r = state.current;
-      if (!r || state.masked) return;
+      if (!r || veiled()) return;
       const L = r.password.length;
       let i = state.activeIdx;
       if (e.key === 'ArrowRight') i = i < 0 ? 0 : Math.min(L - 1, i + 1);
@@ -486,7 +497,7 @@
     if (!r || !$('braid').open) return;
     ledgerDirty = false;
     box.textContent = '';
-    if (state.masked) { $('ledgerNote').textContent = 'Verborgen, solange das Passwort verborgen ist.'; return; }
+    if (veiled()) { $('ledgerNote').textContent = 'Verborgen, solange das Passwort nicht sichtbar ist.'; return; }
     const L = r.password.length;
     const rows = [['m', r.strands.M], ['h', r.strands.H], ['z', r.strands.Z], ['f', r.password]];
     const frag = document.createDocumentFragment();
@@ -524,7 +535,7 @@
   function updateTheorem() {
     const r = state.current;
     const eq = $('thmEq');
-    if (!r || state.masked) {
+    if (!r || veiled()) {
       $('thmCap').textContent = 'Beispiel';
       eq.textContent = '';
       eq.append(glyph('m', 'k'), op('+'), glyph('h', '$'), op('+'), glyph('z', 'r'), op('='), glyph('f', '}'));
@@ -542,11 +553,16 @@
   /* ------------------------------------------------------------ Kopieren & Zwischenablage */
   let copyTimer = 0, clipTimer = 0, clipLeft = 0, clipPending = false;
   const CLIP_SECONDS = 60;
-  async function copyPassword(e) {
+  function copyPassword(e) {
+    if (!state.current) return;
+    FX.ripple($('copyBtn'), e);
+    // Die Aktion läuft im Klick auf „Weiter“, damit der Browser das Kopieren erlaubt.
+    if (window.Abo) window.Abo.gate('copy', doCopy); else doCopy();
+  }
+  async function doCopy() {
     const r = state.current;
     if (!r) return;
     const btn = $('copyBtn');
-    FX.ripple(btn, e);
     try {
       await navigator.clipboard.writeText(r.password);
       btn.classList.add('done');
@@ -622,9 +638,9 @@
     b.setAttribute('aria-pressed', String(state.masked));
     b.setAttribute('aria-label', label);
     b.title = label;
-    stage.setMasked(state.masked);
+    stage.setMasked(veiled());
     hideTip();
-    $('braid').hidden = state.masked;
+    $('braid').hidden = veiled();
     updateTheorem();
     if (!state.current) return;
     if (state.masked) renderMasked(state.current);
@@ -659,6 +675,10 @@
   }
   function setLen(v, silent) {
     const len = $('len');
+    if (window.Abo && v > window.Abo.maxLength()) {
+      v = window.Abo.maxLength();
+      if (!silent) window.Abo.offer('length');
+    }
     len.value = v;
     const pct = ((v - +len.min) / (+len.max - +len.min)) * 100;
     len.style.setProperty('--p', pct.toFixed(2) + '%');
@@ -741,7 +761,8 @@
     ladder.classList.toggle('beyond', lg >= BENCH[0].log);
     const ev = $('youEv');
     ev.textContent = '';
-    pow10(ev, Math.floor(lg));
+    if (lg < 3) ev.append(`≈ ${fmtInt(Math.max(1, Math.round(Math.pow(10, lg))))}`);
+    else pow10(ev, Math.floor(lg));
     ev.append(' J');
   }
 
@@ -845,6 +866,33 @@
     new MutationObserver(refresh).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   }
 
+  function setHint() {
+    if (!state.current) return;
+    $('pwHint').textContent = state.locked
+      ? 'Kostenlos bleibt das Passwort verschwommen. Klick darauf, um es nach einer Wartezeit kurz zu sehen.'
+      : window.matchMedia('(hover: none)').matches
+        ? 'Tipp: Tippe auf ein Zeichen, um seine Verflechtung zu sehen.'
+        : 'Tipp: Fahr über ein Zeichen oder wähle es mit den Pfeiltasten, um seine Verflechtung zu sehen.';
+  }
+
+  /* ------------------------------------------------------------ Schnittstelle für abo.js */
+  function setLocked(on) {
+    state.locked = !!on;
+    $('pwWrap').classList.toggle('locked', state.locked);
+    $('password').setAttribute('aria-hidden', state.locked ? 'true' : 'false');
+    setHint();
+    if (!stage) return;
+    stage.setMasked(veiled());
+    hideTip();
+    $('braid').hidden = veiled();
+    updateTheorem();
+    if (!veiled()) { ledgerDirty = true; renderLedger(); }
+  }
+  window.App = {
+    setLocked,
+    applyLimits() { if (inited) setLen(+$('len').value, true); },
+  };
+
   /* ------------------------------------------------------------ Start */
   async function init() {
     splitHeadline();
@@ -858,6 +906,8 @@
     setupSettings();
     setupActions();
     setupTheme();
+    if (window.Abo) setLocked(!window.Abo.isPro());
+    inited = true;
     readyPromise = (async () => {
       const ok = await runSelfTest();
       if (ok) await mixTime(2048);   // kräftige Grundfüllung des Zeit-Strangs
